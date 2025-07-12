@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="module">
+      async function init() {
+        const { instance } = await WebAssembly.instantiateStreaming(
+          fetch("./graphics.wasm")
+        );
+
+        const width = 600;
+        const height = 600;
+        const bytes_per_pixel = 4;
+
+        const canvas = document.getElementById("graphics-canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const buffer_address = instance.exports.BUFFER.value;
+        const image = new ImageData(
+            new Uint8ClampedArray(
+                instance.exports.memory.buffer,
+                buffer_address,
+                bytes_per_pixel * width * height,
+            ),
+            width,
+            height,
+        );
+
+        const ctx = canvas.getContext("2d");
+
+        instance.exports.go(buffer_address, width, height);
+
+        ctx.putImageData(image, 0, 0);
+      }
+
+      init();
+    </script>
+  </head>
+  <body>
+    <canvas id="graphics-canvas"></canvas>
+  </body>
+</html>
