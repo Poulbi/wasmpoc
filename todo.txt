@@ -1,0 +1,5 @@
+mouse input.
+
+reload game on build
+
+create uint8 buffer in js and pass it to the game.
