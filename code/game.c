@@ -56,8 +56,8 @@ void Logf(char *Format, ...)
     LogMessage(MessageLength, MessageBuffer);
 }
 
-void RenderGradient(s32 Width, s32 Height, r32 dtForFrame, 
-                    b32 MouseDown, s32 MouseX, s32 MouseY)
+void RenderGradient(s32 Width, s32 Height, s32 BytesPerPixel, 
+                    r32 dtForFrame, b32 MouseDown, s32 MouseX, s32 MouseY)
 {
     local_persist s32 Counter = 0;
     local_persist b32 Toggle = true;
@@ -80,11 +80,6 @@ void RenderGradient(s32 Width, s32 Height, r32 dtForFrame,
                 R = (r32)Counter/(r32)Width;
             }
             
-            if(MouseDown)
-            {
-                B = 0.5f;
-            }
-            
             // AA BB GG RR
             u32 Color = ((0xFF << 24) |
                          ((u32)(0xFF * B) << 16) |
@@ -95,57 +90,55 @@ void RenderGradient(s32 Width, s32 Height, r32 dtForFrame,
         }
     }
     
+    u32 Color = 0;
+    
     if(MouseDown)
     {
-        u32 Color = 0;
-        
-        u32 Pitch = BYTES_PER_PIXEL * Width;
-        
-        s32 Width = 5;
-        s32 MinX = MouseX - Width;
-        s32 MaxX = MouseX + Width;
-        s32 MinY = MouseY - Width;
-        s32 MaxY = MouseY + Width;
-        
-#if 0        
-        if(MinX < 0)
+        Color = 0xFFFF0000;
+    }
+    
+    u32 Pitch = BytesPerPixel * Width;
+    
+    s32 Size = 5;
+    s32 MinX = MouseX - Size;
+    s32 MaxX = MouseX + Size;
+    s32 MinY = MouseY - Size;
+    s32 MaxY = MouseY + Size;
+    
+    if(MinX < 0)
+    {
+        MinX = 0;
+    }
+    
+    if(MaxX > Width)
+    {
+        MaxX = Width;
+    }
+    
+    if(MinY < 0)
+    {
+        MinY = 0;
+    }
+    
+    if(MaxY > Height)
+    {
+        MaxY = Height;
+    }
+    
+    u8 *Row = ((u8 *)Buffer) + ((BytesPerPixel*MinX) + (Pitch*MinY));
+    
+    for(s32 Y = MinY;
+        Y < MaxY;
+        Y++)
+    {
+        u32 *Pixel = (u32 *)Row;
+        for(s32 X = MinX;
+            X < MaxX;
+            X++)
         {
-            MinX = 0;
+            *Pixel++ = Color;
         }
-        
-        if(MaxX > Width)
-        {
-            MaxX = Width;
-        }
-        
-        if(MinY < 0)
-        {
-            MinY = 0;
-        }
-        
-        if(MaxY > Height)
-        {
-            MaxY = Height;
-        }
-#endif
-        
-        u8 *Row = ((u8 *)Buffer) + ((BYTES_PER_PIXEL*MinX) + (Pitch*MinY));
-        
-        for(s32 Y = MinY;
-            Y < MaxY;
-            Y++)
-        {
-            u32 *Pixel = (u32 *)Row;
-            for(s32 X = MinX;
-                X < MaxX;
-                X++)
-            {
-                *Pixel++ = Color;
-            }
-            Row += Pitch;
-        }
-        
-        
+        Row += Pitch;
     }
     
     
@@ -157,7 +150,8 @@ void RenderGradient(s32 Width, s32 Height, r32 dtForFrame,
     }
     
 #if 1    
-    Logf("%.3f / (%d, %d) / %s", dtForFrame, MouseX, MouseY, ((MouseDown) ? "down" : "up"));
+    Logf("(%d, %d) / %s", 
+         MouseX, MouseY, ((MouseDown) ? "down" : "up"));
 #endif
     
 }

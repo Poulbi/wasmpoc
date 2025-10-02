@@ -79,14 +79,16 @@ async function main()
  var mouse_clicked = 0;
 
  console.log(canvas);
- document.onmousemove = function(event)
+
+ document.addEventListener('pointermove', (event) =>
  {
+  // Update element position here or handle drawing
   var x_offset = (window.innerWidth - width)/2;
   var y_offset = (window.innerHeight - height)/2;
 
   mouse_x = event.clientX - x_offset;
   mouse_y = event.clientY - y_offset;
- };
+ });
 
  document.onmousedown = function(event)
  {
@@ -106,8 +108,8 @@ async function main()
   prev = timestamp;
 
   // TODO(luca): How to get this???
-  var update_hz = 144;
-  instance.exports.RenderGradient(width, height, 1/update_hz, mouse_down, mouse_x, mouse_y);
+  var update_hz = 30;
+  instance.exports.RenderGradient(width, height, bytes_per_pixel, 1/update_hz, mouse_down, mouse_x, mouse_y);
   ctx.putImageData(image, 0, 0);
   window.requestAnimationFrame(frame);
  }

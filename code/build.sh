@@ -52,7 +52,7 @@ printf 'game.c\n'
 clang \
     $CompilerFlags \
     -nostdlib \
-    --target=wasm32 \
+    -mbulk-memory --target=wasm32 \
     $WarningFlags \
     $LinkerFlags \
     -o ../build/game.wasm \
@@ -60,7 +60,7 @@ clang \
 printf 'index.html platform.js\n'
 ln -f index.html platform.js ../build
 
-if true
+if false
 then
  cd ../ws
  printf 'ws.c\n'
