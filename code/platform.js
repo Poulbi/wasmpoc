@@ -1,11 +1,12 @@
 //- Global variables
-let HEAPU8;
+var HEAPU8;
 
 //- Helper functions
 
 function ReadHeapString(ptr, length)
 {
 	if (length === 0 || !ptr) return '';
+ var hasutf = 0;
 	for (var hasUtf = 0, t, i = 0; !length || i != length; i++)
 	{
 		t = HEAPU8[((ptr)+(i))>>0];
@@ -30,11 +31,20 @@ function ReadHeapString(ptr, length)
 //- Platform
 async function main()
 {
- let env =
+ const socket = new WebSocket('ws://localhost:1234');
+ socket.onmessage = function incoming(message)
+ {
+  if(message.data === "reload")
+  {
+   window.location.reload();
+  }
+ };
+ 
+ var env =
  {
   LogMessage: function(length, message)
   {
-   let messageJS = ReadHeapString(message, length);
+   var messageJS = ReadHeapString(message, length);
    console.log(messageJS);
   },
  };
@@ -44,6 +54,7 @@ async function main()
  );
  HEAPU8 = new Uint8Array(instance.exports.memory.buffer);
 
+ //- Image
  const width = instance.exports.GetBufferWidth();
  const height = instance.exports.GetBufferHeight();
  const bytes_per_pixel = instance.exports.GetBytesPerPixel();
@@ -52,11 +63,7 @@ async function main()
  const ctx = canvas.getContext("2d");
  canvas.width = width;
  canvas.height = height;
- //
- //while(true)
- //{
- //}
- //
+
  const buffer_address = instance.exports.Buffer.value;
  const image = new ImageData(
                 new Uint8ClampedArray(instance.exports.memory.buffer,
@@ -65,15 +72,42 @@ async function main()
                 width,
                 height);
 
- let prev = null;
+ //- Mouse Input
+ var mouse_x = -1;
+ var mouse_y = -1;
+ var mouse_down = false;
+ var mouse_clicked = 0;
+
+ console.log(canvas);
+ document.onmousemove = function(event)
+ {
+  var x_offset = (window.innerWidth - width)/2;
+  var y_offset = (window.innerHeight - height)/2;
+
+  mouse_x = event.clientX - x_offset;
+  mouse_y = event.clientY - y_offset;
+ };
+
+ document.onmousedown = function(event)
+ {
+  mouse_down = true;
+ };
+
+ document.onmouseup = function(event)
+ {
+  mouse_down = false;
+ };
+ 
+ //- Game loop
+ var prev = null;
  function frame(timestamp)
  {
-  let dt = (timestamp - prev)*0.001;
+  var dt = (timestamp - prev)*0.001;
   prev = timestamp;
 
   // TODO(luca): How to get this???
-  let update_hz = 144;
-  instance.exports.RenderGradient(width, height, 1/update_hz);
+  var update_hz = 144;
+  instance.exports.RenderGradient(width, height, 1/update_hz, mouse_down, mouse_x, mouse_y);
   ctx.putImageData(image, 0, 0);
   window.requestAnimationFrame(frame);
  }

@@ -56,7 +56,8 @@ void Logf(char *Format, ...)
     LogMessage(MessageLength, MessageBuffer);
 }
 
-void RenderGradient(s32 Width, s32 Height, r32 dtForFrame)
+void RenderGradient(s32 Width, s32 Height, r32 dtForFrame, 
+                    b32 MouseDown, s32 MouseX, s32 MouseY)
 {
     local_persist s32 Counter = 0;
     local_persist b32 Toggle = true;
@@ -71,12 +72,17 @@ void RenderGradient(s32 Width, s32 Height, r32 dtForFrame)
             if(Toggle)
             {
                 R = 1.0f - ((r32)Counter/(r32)Width);
-                G = ((r32)Counter/(r32)Width);
+                G = 1.0f - ((r32)Counter/(r32)Width);
             }
             else
             {
-                G = 1.0f - (r32)Counter/(r32)Width;
+                G = (r32)Counter/(r32)Width;
                 R = (r32)Counter/(r32)Width;
+            }
+            
+            if(MouseDown)
+            {
+                B = 0.5f;
             }
             
             // AA BB GG RR
@@ -89,7 +95,61 @@ void RenderGradient(s32 Width, s32 Height, r32 dtForFrame)
         }
     }
     
-    Counter += (dtForFrame * 1000) * .3;
+    if(MouseDown)
+    {
+        u32 Color = 0;
+        
+        u32 Pitch = BYTES_PER_PIXEL * Width;
+        
+        s32 Width = 5;
+        s32 MinX = MouseX - Width;
+        s32 MaxX = MouseX + Width;
+        s32 MinY = MouseY - Width;
+        s32 MaxY = MouseY + Width;
+        
+#if 0        
+        if(MinX < 0)
+        {
+            MinX = 0;
+        }
+        
+        if(MaxX > Width)
+        {
+            MaxX = Width;
+        }
+        
+        if(MinY < 0)
+        {
+            MinY = 0;
+        }
+        
+        if(MaxY > Height)
+        {
+            MaxY = Height;
+        }
+#endif
+        
+        u8 *Row = ((u8 *)Buffer) + ((BYTES_PER_PIXEL*MinX) + (Pitch*MinY));
+        
+        for(s32 Y = MinY;
+            Y < MaxY;
+            Y++)
+        {
+            u32 *Pixel = (u32 *)Row;
+            for(s32 X = MinX;
+                X < MaxX;
+                X++)
+            {
+                *Pixel++ = Color;
+            }
+            Row += Pitch;
+        }
+        
+        
+    }
+    
+    
+    Counter += 1000 * dtForFrame * 0.5;
     if(Counter > Width)
     {
         Counter -= Width;
@@ -97,7 +157,7 @@ void RenderGradient(s32 Width, s32 Height, r32 dtForFrame)
     }
     
 #if 1    
-    Logf("%d", Width);
+    Logf("%.3f / (%d, %d) / %s", dtForFrame, MouseX, MouseY, ((MouseDown) ? "down" : "up"));
 #endif
     
 }

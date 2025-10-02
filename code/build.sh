@@ -14,8 +14,6 @@ fi
 
 CompilerFlags="
 -fdiagnostics-absolute-paths
---target=wasm32
--nostdlib
 "
   
 WarningFlags="
@@ -27,6 +25,7 @@ WarningFlags="
 -Wno-pointer-arith
 -Wno-unused-parameter
 -Wno-unused-function
+-Wno-null-dereference
 "
 
 LinkerFlags="
@@ -52,9 +51,25 @@ fi
 printf 'game.c\n'
 clang \
     $CompilerFlags \
+    -nostdlib \
+    --target=wasm32 \
     $WarningFlags \
     $LinkerFlags \
     -o ../build/game.wasm \
     game.c
 printf 'index.html platform.js\n'
-cp index.html platform.js ../build
+ln -f index.html platform.js ../build
+
+if true
+then
+ cd ../ws
+ printf 'ws.c\n'
+ clang \
+  -I./libs/wsServer/include -I./libs/wsServer/src \
+  $CompilerFlags \
+  $WarningFlags \
+  -o ../build/ws \
+  ws.c
+fi
+
+printf '%s\n' "update" | websocat 'ws://localhost:1234/'
