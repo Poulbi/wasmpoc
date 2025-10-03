@@ -1,12 +1,17 @@
+// NOTE(luca): Image buffer format is AA BB GG RR
 
+//~ Types
 // TODO: figure out how to get those from javascript, because they are going to be different in WASM64
-typedef int s32;
-typedef unsigned int u32;
-typedef unsigned char u8;
-typedef float r32;
-typedef int b32;
-#define true 1
-#define false 0
+typedef signed char    s8;
+typedef signed short   s16;
+typedef signed int     s32;
+typedef unsigned char  u8;
+typedef unsigned short u16;
+typedef unsigned int   u32;
+typedef float          r32;
+typedef int            b32;
+#define true           1
+#define false          0
 
 #define local_persist static
 #define global static
@@ -16,28 +21,37 @@ typedef int b32;
 #define HEIGHT (1080/2)
 #define BYTES_PER_PIXEL 4
 
+//~ Libraries
 #define STB_SPRINTF_IMPLEMENTATION
 #include "libs/stb_sprintf.h"
 
-//- Global variables
+//~ Global variables
+// From WASM
 extern u8 __heap_base;
+
+// Memory
 u32 BumpPointer = (u32)&__heap_base;
+u32 BumpAllocated = 0;
+
+// Image
 u8 Buffer[WIDTH*HEIGHT*BYTES_PER_PIXEL];
 
-//- Extern (js) functions
+//~ Functions
+//- Platform (js) 
 extern void LogMessage(u32 Length, char* message);
 
 //- Memory
 void* Malloc(u32 Size)
 {
-    u32 Result = BumpPointer;
-    Result += Size;
+    u32 Result = BumpPointer + BumpAllocated;
+    BumpAllocated += Size;
+    
     return (void *)Result;
 }
 
 void Free(u32 Size)
 {
-    BumpPointer -= Size;
+    BumpAllocated -= Size;
 }
 
 //- Game
@@ -56,55 +70,10 @@ void Logf(char *Format, ...)
     LogMessage(MessageLength, MessageBuffer);
 }
 
-void RenderGradient(s32 Width, s32 Height, s32 BytesPerPixel, 
-                    r32 dtForFrame, b32 MouseDown, s32 MouseX, s32 MouseY)
+void 
+RenderRectangle(u8 *Buffer, s32 Pitch, s32 Width, s32 Height, s32 BytesPerPixel,
+                s32 MinX, s32 MinY, s32 MaxX, s32 MaxY, u32 Color)
 {
-    local_persist s32 Counter = 0;
-    local_persist b32 Toggle = true;
-    for(s32 Y = 0; Y < Height; Y++)
-    {
-        for(s32 X = 0; X < Width; X++)
-        {
-            r32 R = 0;
-            r32 G = 0;
-            r32 B = 0;
-            
-            if(Toggle)
-            {
-                R = 1.0f - ((r32)Counter/(r32)Width);
-                G = 1.0f - ((r32)Counter/(r32)Width);
-            }
-            else
-            {
-                G = (r32)Counter/(r32)Width;
-                R = (r32)Counter/(r32)Width;
-            }
-            
-            // AA BB GG RR
-            u32 Color = ((0xFF << 24) |
-                         ((u32)(0xFF * B) << 16) |
-                         ((u32)(0xFF * G) << 8)  |
-                         ((u32)(0xFF * R) << 0)); 
-            
-            ((u32 *)Buffer)[Y*Width + X] = Color;
-        }
-    }
-    
-    u32 Color = 0;
-    
-    if(MouseDown)
-    {
-        Color = 0xFFFF0000;
-    }
-    
-    u32 Pitch = BytesPerPixel * Width;
-    
-    s32 Size = 5;
-    s32 MinX = MouseX - Size;
-    s32 MaxX = MouseX + Size;
-    s32 MinY = MouseY - Size;
-    s32 MaxY = MouseY + Size;
-    
     if(MinX < 0)
     {
         MinX = 0;
@@ -140,14 +109,37 @@ void RenderGradient(s32 Width, s32 Height, s32 BytesPerPixel,
         }
         Row += Pitch;
     }
-    
-    
-    Counter += 1000 * dtForFrame * 0.5;
-    if(Counter > Width)
-    {
-        Counter -= Width;
-        Toggle = !Toggle;
+}
+
+void 
+UpdateAndRender(s32 Width, s32 Height, s32 BytesPerPixel, 
+                r32 dtForFrame, b32 MouseDown, s32 MouseX, s32 MouseY)
+{
+#if 1
+    // Clear the buffer to black.
+    {    
+        u32 *Clear = (u32 *)Buffer;
+        s32 ClearSize = Width*Height;
+        while(ClearSize--) *Clear++ = 0xFF000000;
     }
+#endif
+    
+    u32 Color = 0;
+    if(MouseDown)
+    {
+        Color = 0xFF00FF00;
+    }
+    
+    u32 Pitch = BytesPerPixel * Width;
+    
+    s32 Size = 5;
+    s32 MinX = MouseX - Size;
+    s32 MaxX = MouseX + Size;
+    s32 MinY = MouseY - Size;
+    s32 MaxY = MouseY + Size;
+    
+    RenderRectangle(Buffer, Pitch, Width, Height, BytesPerPixel, 
+                    MinX, MinY, MaxX, MaxY, Color);
     
 #if 1    
     Logf("(%d, %d) / %s", 

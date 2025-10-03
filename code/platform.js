@@ -2,7 +2,6 @@
 var HEAPU8;
 
 //- Helper functions
-
 function ReadHeapString(ptr, length)
 {
 	if (length === 0 || !ptr) return '';
@@ -101,24 +100,19 @@ async function main()
  };
  
  //- Game loop
- var prev = null;
- function frame(timestamp)
+ let prev = 0;
+ let timestamp = 0;
+ let update_hz = 30;
+ while(true)
  {
-  var dt = (timestamp - prev)*0.001;
+  let dt = (timestamp - prev)*0.001;
   prev = timestamp;
 
-  // TODO(luca): How to get this???
-  var update_hz = 30;
-  instance.exports.RenderGradient(width, height, bytes_per_pixel, 1/update_hz, mouse_down, mouse_x, mouse_y);
+  instance.exports.UpdateAndRender(width, height, bytes_per_pixel, 1/update_hz, mouse_down, mouse_x, mouse_y);
   ctx.putImageData(image, 0, 0);
-  window.requestAnimationFrame(frame);
+
+  await new Promise(requestAnimationFrame);
  }
-
- window.requestAnimationFrame((timestamp) => {
-  prev = timestamp;
-  window.requestAnimationFrame(frame);
- });
 }
-
 
 window.onload = main;

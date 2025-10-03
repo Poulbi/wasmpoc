@@ -28,11 +28,17 @@ WarningFlags="
 -Wno-null-dereference
 "
 
-LinkerFlags="
+WasmCompilerFlags="
+-nostdlib
+-mbulk-memory
+--target=wasm32
+"
+WasmLinkerFlags="
 -Wl,--allow-undefined
 -Wl,--no-entry
 -Wl,--export-all
 -Wl,--export=LogMessage
+-Wl,-z,stack-size=$((64 * 1024))
 "
 
 if [ "$Mode" = "debug" ]
@@ -44,21 +50,26 @@ then
 elif [ "$Mode" = "release" ]
 then
  CompilerFlags="$CompilerFlags
- -O2
+ -O3
+ "
+ WasmCompilerFlags="$WasmCompilerFlags
+ -flto
+ "
+ WasmLinkerFlags="$WasmLinkerFlags
+ -Wl,--lto-O3
  "
 fi
 
 printf 'game.c\n'
 clang \
     $CompilerFlags \
-    -nostdlib \
-    -mbulk-memory --target=wasm32 \
+    $WasmCompilerFlags $WasmLinkerFlags \
     $WarningFlags \
-    $LinkerFlags \
     -o ../build/game.wasm \
     game.c
-printf 'index.html platform.js\n'
+printf 'index.html platform.js favicon.ico\n'
 ln -f index.html platform.js ../build
+cp ../data/favicon.ico ../build
 
 if false
 then

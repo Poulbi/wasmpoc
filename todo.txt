@@ -1,5 +1,14 @@
-mouse input.
+Web platform
+- Make an approximation of the screen's refreshrate.
+- Audio
+- Keyboard input
+- Font?
+- Profiling?
+WASM
+- Initialize the image memory from the heap.
+- Debugger?
+- Profiling?
 
-reload game on build
-
-create uint8 buffer in js and pass it to the game.
+ARCHIVED
+x reload game on build
+x create uint8 buffer in js and pass it to the game.
