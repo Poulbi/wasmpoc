@@ -26,6 +26,7 @@ WarningFlags="
 -Wno-unused-parameter
 -Wno-unused-function
 -Wno-null-dereference
+-Wno-missing-braces
 "
 
 WasmCompilerFlags="
@@ -60,13 +61,13 @@ then
  "
 fi
 
-printf 'game.c\n'
+printf 'game.cpp\n'
 clang \
     $CompilerFlags \
     $WasmCompilerFlags $WasmLinkerFlags \
     $WarningFlags \
     -o ../build/game.wasm \
-    game.c
+    game.cpp
 printf 'index.html platform.js favicon.ico\n'
 ln -f index.html platform.js ../build
 cp ../data/favicon.ico ../build
@@ -81,6 +82,12 @@ then
   $WarningFlags \
   -o ../build/ws \
   ws.c
+fi
+
+if [ -s "../build/font.c" ]
+then
+ printf 'font.ttf\n'
+ xxd -i -n "data_font_ttf" ../data/font.ttf > ../build/font.c
 fi
 
 printf '%s\n' "update" | websocat 'ws://localhost:1234/'

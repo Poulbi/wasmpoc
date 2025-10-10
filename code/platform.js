@@ -46,6 +46,15 @@ async function main()
    var messageJS = ReadHeapString(message, length);
    console.log(messageJS);
   },
+  floor: Math.floor,
+  ceil: Math.ceil,
+  sqrt: Math.sqrt,
+  pow: Math.pow,
+  fmod: Math.fround, // Note: JavaScript doesn't have a native fmod function, so we use fround as a close approximation
+  cos: Math.cos,
+  acos: Math.acos,
+  fabs: Math.abs, // Note: JavaScript doesn't have a native fabs function, so we use abs as a close approximation
+  round: Math.round,
  };
 
  const { instance } = await WebAssembly.instantiateStreaming(
@@ -63,7 +72,7 @@ async function main()
  canvas.width = width;
  canvas.height = height;
 
- const buffer_address = instance.exports.Buffer.value;
+ const buffer_address = instance.exports.GlobalImageBuffer.value;
  const image = new ImageData(
                 new Uint8ClampedArray(instance.exports.memory.buffer,
                                       buffer_address,

@@ -10,7 +10,7 @@ patterns = {
     "*.4coder",
 };
 blacklist_patterns = {
-    ".*",
+    ".*", "font.c",
 };
 load_paths_base = {
     { ".", .relative = true, .recursive = true, },
