@@ -31,6 +31,16 @@ u8 GlobalImageBuffer[WIDTH*HEIGHT*BYTES_PER_PIXEL];
 external void LogMessage(u32 Length, char* message);
 #define S_Len(String) (sizeof(String) - 1), (String)
 
+external r32 floor(r32 X);
+external r32 ceil(r32 X);
+external r32 sqrt(r32 X);
+external r32 pow(r32 X, r32 Y);
+external r32 fmod(r32 X, r32 Y);
+external r32 cos(r32 X);
+external r32 acos(r32 X);
+external r32 fabs(r32 X);
+external r32 round(r32 X);
+
 //- Memory
 void* Malloc(psize Size)
 {
@@ -106,57 +116,6 @@ RenderRectangle(u8 *Buffer, s32 Pitch, s32 Width, s32 Height, s32 BytesPerPixel,
         Row += Pitch;
     }
 }
-#if 0
-void memcpy(void *Source, void *Dest, u32 Size)
-{
-    
-}
-
-void memset(void *Source, u32 Value, u32 Size)
-{
-    
-}
-
-u32 strlen(char *String)
-{
-    return 0;
-}
-
-external r32 floor(r32 X);
-external r32 ceil(r32 X);
-external r32 sqrt(r32 X);
-external r32 pow(r32 X, r32 Y);
-external r32 fmod(r32 X, r32 Y);
-external r32 cos(r32 X);
-external r32 acos(r32 X);
-external r32 fabs(r32 X);
-external r32 round(r32 X);
-
-#define STBTT_ifloor(x)   ((int) floor(x))
-#define STBTT_iceil(x)    ((int) ceil(x))
-#define STBTT_sqrt(x)      sqrt(x)
-#define STBTT_pow(x,y)     pow(x,y)
-#define STBTT_fmod(x,y)    fmod(x,y)
-#define STBTT_cos(x)       cos(x)
-#define STBTT_acos(x)      acos(x)
-#define STBTT_fabs(x)      fabs(x)
-
-#define STBTT_malloc(x,u)  ((void)(u),Malloc(x))
-#define STBTT_free(x,u)    ((void)(u),Free(x))
-
-#define STBTT_assert(x)    Assert(x)
-#define STBTT_strlen(x)    strlen(x)
-
-#define STBTT_memcpy       memcpy
-#define STBTT_memset       memset
-
-#define HANDMADE_FONT_IMPLEMENTATION
-#define STBTT_RASTERIZER_VERSION 1
-#include "libs/handmade_font.h"
-
-global game_font GlobalFont;
-#include "../build/font.c"
-#endif
 
 external void 
 UpdateAndRender(s32 Width, s32 Height, s32 BytesPerPixel, 
@@ -196,8 +155,10 @@ UpdateAndRender(s32 Width, s32 Height, s32 BytesPerPixel,
     u32 Color = 0;
     if(MouseDown)
     {
-        Color = 0xFF00FF00;
+        Color = 0xFF00FF;
     }
+    
+    v2 Min = {};
     
     s32 ColumnsCount = 6;
     
@@ -265,7 +226,7 @@ UpdateAndRender(s32 Width, s32 Height, s32 BytesPerPixel,
     }
 #endif
     
-#if 0    
+#if 1    
     Logf("(%d, %d) / %s", 
          MouseX, MouseY, ((MouseDown) ? "down" : "up"));
 #endif

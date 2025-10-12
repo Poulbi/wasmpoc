@@ -72,7 +72,7 @@ printf 'index.html platform.js favicon.ico\n'
 ln -f index.html platform.js ../build
 cp ../data/favicon.ico ../build
 
-if false
+if [ ! -s "../build/ws" ]
 then
  cd ../ws
  printf 'ws.c\n'

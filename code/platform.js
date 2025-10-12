@@ -27,17 +27,13 @@ function ReadHeapString(ptr, length)
 	return ret;
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 //- Platform
 async function main()
 {
- const socket = new WebSocket('ws://localhost:1234');
- socket.onmessage = function incoming(message)
- {
-  if(message.data === "reload")
-  {
-   window.location.reload();
-  }
- };
  
  var env =
  {
@@ -57,24 +53,38 @@ async function main()
   round: Math.round,
  };
 
- const { instance } = await WebAssembly.instantiateStreaming(
+ let wasm_instance = 0;
+
+ let { instance } = await WebAssembly.instantiateStreaming(
    fetch("./game.wasm"), {env:env}
  );
- HEAPU8 = new Uint8Array(instance.exports.memory.buffer);
+
+ wasm_instance = instance;
+ HEAPU8 = new Uint8Array(wasm_instance.exports.memory.buffer);
+
+ let reload = false;
+ const socket = new WebSocket('ws://localhost:1234');
+ socket.onmessage = async function incoming(message)
+ {
+  if(message.data === "reload")
+  {
+   reload = true;
+  }
+ };
 
  //- Image
- const width = instance.exports.GetBufferWidth();
- const height = instance.exports.GetBufferHeight();
- const bytes_per_pixel = instance.exports.GetBytesPerPixel();
+ const width = wasm_instance.exports.GetBufferWidth();
+ const height = wasm_instance.exports.GetBufferHeight();
+ const bytes_per_pixel = wasm_instance.exports.GetBytesPerPixel();
 
  const canvas = document.getElementById("graphics-canvas");
  const ctx = canvas.getContext("2d");
  canvas.width = width;
  canvas.height = height;
 
- const buffer_address = instance.exports.GlobalImageBuffer.value;
- const image = new ImageData(
-                new Uint8ClampedArray(instance.exports.memory.buffer,
+ let buffer_address = wasm_instance.exports.GlobalImageBuffer.value;
+ let image = new ImageData(
+                new Uint8ClampedArray(wasm_instance.exports.memory.buffer,
                                       buffer_address,
                                       bytes_per_pixel * width * height),
                 width,
@@ -108,20 +118,41 @@ async function main()
   mouse_down = false;
  };
  
- //- Game loop
- let prev = 0;
- let timestamp = 0;
  let update_hz = 30;
- while(true)
- {
-  let dt = (timestamp - prev)*0.001;
-  prev = timestamp;
+ let target_seconds_for_frame = 1/update_hz;
 
-  instance.exports.UpdateAndRender(width, height, bytes_per_pixel, 1/update_hz, mouse_down, mouse_x, mouse_y);
+ //- Game loop
+ let running = true;
+ let end_counter = 0;
+ let work_time_elapsed = 0;
+ while(running)
+ {
+  if(reload)
+  {
+   let { instance } = await WebAssembly.instantiateStreaming(
+     fetch("./game.wasm"), {env:env}
+   );
+   HEAPU8 = new Uint8Array(instance.exports.memory.buffer);
+   image = new ImageData(
+            new Uint8ClampedArray(instance.exports.memory.buffer,
+                                  instance.exports.GlobalImageBuffer.value,
+                                  bytes_per_pixel * width * height),
+            width, height);
+   wasm_instance = instance;
+   reload = false;
+  }
+
+  let last_counter = performance.now();
+
+  wasm_instance.exports.UpdateAndRender(width, height, bytes_per_pixel,
+                                        target_seconds_for_frame, 
+                                        mouse_down, mouse_x, mouse_y);
+
   ctx.putImageData(image, 0, 0);
 
   await new Promise(requestAnimationFrame);
  }
+
 }
 
 window.onload = main;
