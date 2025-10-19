@@ -7,7 +7,7 @@
 #define BYTES_PER_PIXEL 4
 
 //~ Libraries
-#define STB_SPRINTF_IMPLEMENTATION
+#de,fine STB_SPRINTF_IMPLEMENTATION
 #include "libs/stb_sprintf.h"
 #include "libs/handmade_math.h"
 
