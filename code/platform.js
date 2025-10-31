@@ -1,8 +1,9 @@
-//- Global variables
-var HEAPU8;
+//- Globals
+var HEAPU8 = null;
+var canvas = null;
 
 //- Helper functions
-function ReadHeapString(ptr, length)
+function readHeapString(ptr, length)
 {
 	if (length === 0 || !ptr) return '';
  var hasutf = 0;
@@ -34,23 +35,33 @@ function sleep(ms) {
 //- Platform
 async function main()
 {
- 
  var env =
  {
-  LogMessage: function(length, message)
+  LogMessage: function(length, string)
   {
-   var messageJS = ReadHeapString(message, length);
-   console.log(messageJS);
+   let message = readHeapString(string, length);
+   console.log(message);
   },
+
   floor: Math.floor,
   ceil: Math.ceil,
   sqrt: Math.sqrt,
   pow: Math.pow,
-  fmod: Math.fround, // Note: JavaScript doesn't have a native fmod function, so we use fround as a close approximation
+  fmod: function(a, b) { 
+   let result = a%b;
+   return result;
+  },
   cos: Math.cos,
   acos: Math.acos,
-  fabs: Math.abs, // Note: JavaScript doesn't have a native fabs function, so we use abs as a close approximation
+  fabs: Math.abs,
   round: Math.round,
+
+  JS_DrawText: function(length, string, x, y) {
+   let text = readHeapString(string, length);
+   const context = canvas.getContext("2d");
+   context.font = "16px serif";
+   context.fillText("hello", x, y);
+  },
  };
 
  let wasm_instance = 0;
@@ -77,10 +88,10 @@ async function main()
  const height = wasm_instance.exports.GetBufferHeight();
  const bytes_per_pixel = wasm_instance.exports.GetBytesPerPixel();
 
- const canvas = document.getElementById("graphics-canvas");
- const ctx = canvas.getContext("2d");
+ canvas = document.getElementById("graphics-canvas");
  canvas.width = width;
  canvas.height = height;
+ const context = canvas.getContext("2d");
 
  let buffer_address = wasm_instance.exports.GlobalImageBuffer.value;
  let image = new ImageData(
@@ -121,6 +132,20 @@ async function main()
  let update_hz = 30;
  let target_seconds_for_frame = 1/update_hz;
 
+ {
+ let input_element = document.body.querySelector("input");
+ let rect = canvas.getBoundingClientRect();
+ let x = 8;
+ let y = 10;
+ let width = 142;
+ let height = 42;
+ input_element.style.position = `absolute`;
+ input_element.style.left = `${rect.left + x}px`;
+ input_element.style.top = `${rect.top + y}px`;
+ input_element.style.width = `${width}px`;
+ input_element.style.height = `${height}px`;
+ }
+
  //- Game loop
  let running = true;
  let end_counter = 0;
@@ -144,11 +169,15 @@ async function main()
 
   let last_counter = performance.now();
 
+  // NOTE(luca): We need one frame of lag here because otherwise we cannot call
+  // canvas drawing functions in `UpdateAndRender()` since they will be overwritten
+  // by the `context.putImageData()` call.
+  context.putImageData(image, 0, 0);
+
   wasm_instance.exports.UpdateAndRender(width, height, bytes_per_pixel,
                                         target_seconds_for_frame, 
                                         mouse_down, mouse_x, mouse_y);
 
-  ctx.putImageData(image, 0, 0);
 
   await new Promise(requestAnimationFrame);
  }

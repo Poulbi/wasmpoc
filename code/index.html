@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-  <style>
+   <style>
 /* http://meyerweb.com/eric/tools/css/reset/ 
    v2.0 | 20110126
    License: none (public domain)
@@ -50,20 +50,43 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
-</style>
 
-<style>
- canvas#graphics-canvas {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+/* Center canvas */
+.centered {
+ position: absolute;
+ top: 50%;
+ left: 50%;
+ transform: translate(-50%, -50%);
+}
 
- }
-</style>
+input {
+ position: absolute;
+ padding: 0;
+ font-size: 16px;
+
+ background: rgba(0,0,0,0.0);
+
+ /*debug*/
+ border: 1px solid red;
+ /*prod*/
+ /*border: none;*/
+
+ outline: none;
+
+}
+input:focus {
+ /*debug*/
+ border: 1px solid blue;
+ /*prod*/
+ /*border: none;*/
+}
+
+   </style>
+
     <script type="module" src="./platform.js"></script>
   </head>
   <body>
-    <canvas id="graphics-canvas"></canvas>
+    <canvas id="graphics-canvas" class="centered"></canvas>
+    <input type="text">
   </body>
 </html>

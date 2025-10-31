@@ -7,7 +7,7 @@
 #define BYTES_PER_PIXEL 4
 
 //~ Libraries
-#de,fine STB_SPRINTF_IMPLEMENTATION
+#define STB_SPRINTF_IMPLEMENTATION
 #include "libs/stb_sprintf.h"
 #include "libs/handmade_math.h"
 
@@ -28,8 +28,10 @@ u8 GlobalImageBuffer[WIDTH*HEIGHT*BYTES_PER_PIXEL];
 //~ Functions
 //- Platform (js) 
 #define external extern "C"
-external void LogMessage(u32 Length, char* message);
+external void LogMessage(u32 Length, char *Message);
 #define S_Len(String) (sizeof(String) - 1), (String)
+
+external void JS_DrawText(u32 Length, char *Message, s32 X, s32 Y);
 
 external r32 floor(r32 X);
 external r32 ceil(r32 X);
@@ -207,11 +209,18 @@ UpdateAndRender(s32 Width, s32 Height, s32 BytesPerPixel,
             RenderRectangle(Buffer, Pitch, Width, Height, BytesPerPixel, 
                             MinX, MinY, MaxX, MaxY,
                             Color);
+            
+            
+            
+#if 0            
+            JS_DrawText(S_Len("hello world world world"), MinX, MinY + 16);
+#endif
+            
+            
         }
         
         Toggle = !Toggle;
     }
-    
     
 #if 0    
     // Draw mouse pointer
