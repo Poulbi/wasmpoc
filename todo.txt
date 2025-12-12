@@ -8,6 +8,8 @@ WASM
 - Initialize the image memory from the heap.
 - Debugger?
 - Profiling?
+- Multi-threading
+		-https://discord.com/channels/239737791225790464/1320093594593263691
 
 ARCHIVED
 x reload game on build
